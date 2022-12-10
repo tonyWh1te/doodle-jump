@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let doodlerBottomSpace = 100;
   let isGameOver = false;
   let platformCount = 5;
+  let upTimerId;
+  let downTimerId;
 
   start();
 
@@ -28,6 +30,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function fall(doodler) {
+    clearInterval(upTimerId);
+
+    downTimerId = setInterval(() => {
+      doodlerBottomSpace -= 5;
+      doodler.style.bottom = `${doodlerBottomSpace}px`;
+
+      if (doodlerBottomSpace <= 0) {
+        gameOver();
+      }
+    }, 30);
+  }
+
+  function jump(doodler) {
+    clearInterval(downTimerId);
+
+    upTimerId = setInterval(() => {
+      doodlerBottomSpace += 20;
+      doodler.style.bottom = `${doodlerBottomSpace}px`;
+
+      if (doodlerBottomSpace > 350) {
+        fall(doodler);
+      }
+    }, 30);
+  }
+
   function movePlatforms(platforms) {
     if (doodlerBottomSpace > 200) {
       platforms.forEach((platform) => {
@@ -38,11 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function gameOver(params) {
+    console.log('game over');
+    isGameOver = true;
+    clearInterval(upTimerId);
+    clearInterval(downTimerId);
+  }
+
   function start() {
     if (!isGameOver) {
       createDoodler(doodler, grid);
       createPlatforms(platformCount);
       setInterval(movePlatforms, 30, platforms);
+      jump(doodler);
     }
   }
 });
