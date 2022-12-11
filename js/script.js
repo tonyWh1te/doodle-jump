@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const doodler = document.createElement('div');
   const platforms = [];
   let doodlerLeftSpace = 100;
-  let startPoint = 150;
+  let startPoint = 100;
   let doodlerBottomSpace = startPoint;
   let isGameOver = false;
   let platformCount = 5;
@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let isGoingRight = false;
   let leftTimerId;
   let rightTimerId;
+  let score = 0;
 
   start();
 
@@ -81,16 +82,19 @@ document.addEventListener('DOMContentLoaded', () => {
         platform.bottom -= 4;
         const visual = platform.visual;
         visual.style.bottom = `${platform.bottom}px`;
+
+        //удаление  и добавление платформ
+        if (platform.bottom < 10) {
+          let firstPlatform = platforms[0].visual;
+          firstPlatform.classList.remove('platform');
+          platforms.shift();
+          score++;
+          let newPlatform = new Platform(600);
+          newPlatform.draw(grid);
+          platforms.push(newPlatform);
+        }
       });
     }
-  }
-
-  function gameOver() {
-    console.log('game over');
-    isGameOver = true;
-    clearInterval(upTimerId);
-    clearInterval(downTimerId);
-    // removeEventListener('keyup', (e) => control(e, doodler));
   }
 
   function moveLeft(doodler) {
@@ -138,6 +142,22 @@ document.addEventListener('DOMContentLoaded', () => {
       default:
         break;
     }
+  }
+
+  function gameOver() {
+    console.log('game over');
+    isGameOver = true;
+
+    while (grid.firstChild) {
+      grid.removeChild(grid.firstChild);
+    }
+    grid.innerHTML = score;
+
+    clearInterval(upTimerId);
+    clearInterval(downTimerId);
+    clearInterval(rightTimerId);
+    clearInterval(leftTimerId);
+    // removeEventListener('keyup', (e) => control(e, doodler));
   }
 
   function start() {
