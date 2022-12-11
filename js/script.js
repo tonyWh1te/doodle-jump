@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const doodler = document.createElement('div');
   const platforms = [];
   let doodlerLeftSpace = 100;
-  let startPoint = 100;
+  let startPoint = 150;
   let doodlerBottomSpace = startPoint;
   let isGameOver = false;
   let platformCount = 5;
@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let isGoingLeft = false;
   let isGoingRight = false;
   let leftTimerId;
+  let rightTimerId;
 
   start();
 
@@ -89,15 +90,49 @@ document.addEventListener('DOMContentLoaded', () => {
     isGameOver = true;
     clearInterval(upTimerId);
     clearInterval(downTimerId);
+    // removeEventListener('keyup', (e) => control(e, doodler));
   }
 
-  function control(e) {
+  function moveLeft(doodler) {
+    if (isGoingRight) {
+      clearInterval(rightTimerId);
+      isGoingRight = false;
+    }
+
+    isGoingLeft = true;
+
+    leftTimerId = setInterval(() => {
+      if (doodlerLeftSpace >= 0) {
+        doodlerLeftSpace -= 5;
+        doodler.style.left = `${doodlerLeftSpace}px`;
+      } else moveRight(doodler);
+    }, 30);
+  }
+
+  function moveRight(doodler) {
+    if (isGoingLeft) {
+      clearInterval(leftTimerId);
+      isGoingLeft = false;
+    }
+
+    isGoingRight = true;
+
+    rightTimerId = setInterval(() => {
+      if (doodlerLeftSpace <= 340) {
+        doodlerLeftSpace += 5;
+        doodler.style.right = `${doodlerLeftSpace}px`;
+      } else moveLeft(doodler);
+    });
+  }
+
+  function control(e, doodler) {
+    // console.log('press');
     switch (e.key) {
       case 'ArrowLeft':
+        moveLeft(doodler);
         break;
       case 'ArrowRight':
-        break;
-      case 'ArrowUp':
+        moveRight(doodler);
         break;
 
       default:
@@ -111,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
       createDoodler(doodler, grid);
       setInterval(movePlatforms, 30, platforms);
       jump(doodler);
+      addEventListener('keyup', (e) => control(e, doodler));
     }
   }
 });
