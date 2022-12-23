@@ -14,3 +14,21 @@ export class Platform {
     parent.appendChild(visual);
   }
 }
+
+export class Doodler {
+  constructor({ velocity, jumpHeight, position }) {
+    this.velocity = velocity;
+    this.jumpHeight = jumpHeight;
+    this.position = position;
+    this.visual = document.createElement('div');
+  }
+
+  draw(parent) {
+    const doodler = this.visual;
+    doodler.classList.add('doodler');
+    doodler.style.left = `${this.position.left}px`;
+    doodler.style.bottom = `${this.position.bottom}px`;
+
+    parent.appendChild(doodler);
+  }
+}

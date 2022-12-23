@@ -1,14 +1,13 @@
 'use strict';
 
-import { Platform } from './classes.js';
+import { Platform, Doodler } from './classes.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const grid = document.querySelector('.grid');
-  const doodler = document.createElement('div');
   const platforms = [];
-  let doodlerLeftSpace = 100;
-  let startPoint = 100;
-  let doodlerBottomSpace = startPoint;
+  const duration = 1000;
+  const iterations = 60;
+  let doodler;
   let isGameOver = false;
   let platformCount = 5;
   let upTimerId;
@@ -22,17 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   start();
 
-  function createDoodler(doodler, parent) {
-    doodler.classList.add('doodler');
-    parent.appendChild(doodler);
-    doodlerLeftSpace = platforms[0].left;
-    doodler.style.left = `${doodlerLeftSpace}px`;
-    doodler.style.bottom = `${doodlerBottomSpace}px`;
-  }
-
-  function createPlatforms(count) {
-    for (let i = 0; i < count; i++) {
-      let platGap = 600 / count; //расстояние между платформами
+  function createPlatforms() {
+    for (let i = 0; i < platformCount; i++) {
+      let platGap = 600 / platformCount; //расстояние между платформами
       let newPlatBottom = 100 + i * platGap; //координата платформы
       const newPlatform = new Platform(newPlatBottom);
       newPlatform.draw(grid);
@@ -40,26 +31,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const doodlerCollidesWithPlat = (doodler, platform) => {
+    return (
+      doodler.position.bottom >= platform.bottom &&
+      doodler.position.bottom <= platform.bottom + 15 &&
+      doodler.position.left + 60 >= platform.left &&
+      doodler.position.left <= platform.left + 85 &&
+      !isJumping
+    );
+  };
+
   function fall(doodler) {
+    isJumping = false;
+
     clearInterval(upTimerId);
 
-    isJumping = false;
     downTimerId = setInterval(() => {
-      doodlerBottomSpace -= 5;
-      doodler.style.bottom = `${doodlerBottomSpace}px`;
+      doodler.position.bottom -= doodler.velocity.y;
+      doodler.visual.style.bottom = `${doodler.position.bottom}px`;
 
-      if (doodlerBottomSpace <= 0) {
+      if (doodler.position.bottom <= 0) {
         gameOver();
       }
 
       platforms.forEach((platform) => {
-        if (doodlerBottomSpace >= platform.bottom && doodlerBottomSpace <= platform.bottom + 15 && doodlerLeftSpace + 60 >= platform.left && doodlerLeftSpace <= platform.left + 85 && !isJumping) {
+        if (doodlerCollidesWithPlat(doodler, platform)) {
           console.log('landed');
-          startPoint = doodlerBottomSpace;
           jump(doodler);
         }
       });
-    }, 30);
+    }, duration / iterations);
   }
 
   function jump(doodler) {
@@ -67,28 +68,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     isJumping = true;
     upTimerId = setInterval(() => {
-      doodlerBottomSpace += 20;
-      doodler.style.bottom = `${doodlerBottomSpace}px`;
+      doodler.position.bottom += doodler.velocity.y;
+      doodler.visual.style.bottom = `${doodler.position.bottom}px`;
 
-      if (doodlerBottomSpace > startPoint + 200) {
+      if (doodler.position.bottom > doodler.jumpHeight) {
         fall(doodler);
+        isJumping = false;
       }
-    }, 30);
+    }, duration / iterations);
   }
 
-  function movePlatforms(platforms) {
-    if (doodlerBottomSpace > 200) {
+  function movePlatforms(platforms, doodler) {
+    if (doodler.position.bottom > 200) {
       platforms.forEach((platform) => {
         platform.bottom -= 4;
-        const visual = platform.visual;
-        visual.style.bottom = `${platform.bottom}px`;
+        platform.visual.style.bottom = `${platform.bottom}px`;
 
         //удаление  и добавление платформ
         if (platform.bottom < 10) {
           let firstPlatform = platforms[0].visual;
-          firstPlatform.classList.remove('platform');
+          firstPlatform.remove();
           platforms.shift();
+
           score++;
+
           let newPlatform = new Platform(600);
           newPlatform.draw(grid);
           platforms.push(newPlatform);
@@ -98,6 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function moveLeft(doodler) {
+    clearInterval(leftTimerId);
+
     if (isGoingRight) {
       clearInterval(rightTimerId);
       isGoingRight = false;
@@ -106,14 +111,18 @@ document.addEventListener('DOMContentLoaded', () => {
     isGoingLeft = true;
 
     leftTimerId = setInterval(() => {
-      if (doodlerLeftSpace >= 0) {
-        doodlerLeftSpace -= 5;
-        doodler.style.left = `${doodlerLeftSpace}px`;
-      } else moveRight(doodler);
-    }, 30);
+      if (doodler.position.left >= 0) {
+        doodler.position.left -= doodler.velocity.x;
+        doodler.visual.style.left = `${doodler.position.left}px`;
+      } else {
+        moveRight(doodler);
+      }
+    }, duration / iterations);
   }
 
   function moveRight(doodler) {
+    clearInterval(rightTimerId);
+
     if (isGoingLeft) {
       clearInterval(leftTimerId);
       isGoingLeft = false;
@@ -122,15 +131,16 @@ document.addEventListener('DOMContentLoaded', () => {
     isGoingRight = true;
 
     rightTimerId = setInterval(() => {
-      if (doodlerLeftSpace <= 340) {
-        doodlerLeftSpace += 5;
-        doodler.style.right = `${doodlerLeftSpace}px`;
-      } else moveLeft(doodler);
-    });
+      if (doodler.position.left <= 313) {
+        doodler.position.left += doodler.velocity.x;
+        doodler.visual.style.left = `${doodler.position.left}px`;
+      } else {
+        moveLeft(doodler);
+      }
+    }, duration / iterations);
   }
 
   function control(e, doodler) {
-    // console.log('press');
     switch (e.key) {
       case 'ArrowLeft':
         moveLeft(doodler);
@@ -157,14 +167,26 @@ document.addEventListener('DOMContentLoaded', () => {
     clearInterval(downTimerId);
     clearInterval(rightTimerId);
     clearInterval(leftTimerId);
-    // removeEventListener('keyup', (e) => control(e, doodler));
   }
 
   function start() {
     if (!isGameOver) {
-      createPlatforms(platformCount);
-      createDoodler(doodler, grid);
-      setInterval(movePlatforms, 30, platforms);
+      createPlatforms();
+
+      doodler = new Doodler({
+        velocity: {
+          x: 3,
+          y: 4,
+        },
+        jumpHeight: 270,
+        position: {
+          left: platforms[0].left,
+          bottom: 150,
+        },
+      });
+
+      doodler.draw(grid);
+      setInterval(movePlatforms, duration / iterations, platforms, doodler);
       jump(doodler);
       addEventListener('keyup', (e) => control(e, doodler));
     }
