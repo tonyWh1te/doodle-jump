@@ -2,13 +2,12 @@
 
 import { Platform, Doodler } from './classes.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+addEventListener('DOMContentLoaded', () => {
   const grid = document.querySelector('.grid');
-  const platforms = [];
+  let platforms = [];
   const duration = 1000;
   const iterations = 60;
   let doodler;
-  let isGameOver = false;
   let platformCount = 5;
   let upTimerId;
   let downTimerId;
@@ -18,8 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let leftTimerId;
   let rightTimerId;
   let score = 0;
-
-  start();
 
   function createPlatforms() {
     for (let i = 0; i < platformCount; i++) {
@@ -154,14 +151,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function gameOver() {
-    console.log('game over');
-    isGameOver = true;
+  const createButton = (className, text) => {
+    const btn = document.createElement('button');
+    btn.classList.add(className);
+    btn.textContent = text;
+    return btn;
+  };
 
+  function gameOver() {
     while (grid.firstChild) {
       grid.removeChild(grid.firstChild);
     }
-    grid.innerHTML = score;
+
+    grid.innerHTML = `<h5>${score}</h5>`;
+    grid.append(createButton('Button', 'Restart'));
+
+    platforms = [];
+    score = 0;
 
     clearInterval(upTimerId);
     clearInterval(downTimerId);
@@ -170,25 +176,34 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function start() {
-    if (!isGameOver) {
-      createPlatforms();
+    createPlatforms();
 
-      doodler = new Doodler({
-        velocity: {
-          x: 3,
-          y: 4,
-        },
-        jumpHeight: 270,
-        position: {
-          left: platforms[0].left,
-          bottom: 150,
-        },
-      });
+    doodler = new Doodler({
+      velocity: {
+        x: 3,
+        y: 4,
+      },
+      jumpHeight: 270,
+      position: {
+        left: platforms[0].left,
+        bottom: 150,
+      },
+    });
 
-      doodler.draw(grid);
-      setInterval(movePlatforms, duration / iterations, platforms, doodler);
-      jump(doodler);
-      addEventListener('keyup', (e) => control(e, doodler));
-    }
+    doodler.draw(grid);
+    setInterval(movePlatforms, duration / iterations, platforms, doodler);
+    jump(doodler);
+    addEventListener('keyup', (e) => control(e, doodler));
   }
+  // start();
+
+  addEventListener('click', (e) => {
+    if (e.target.closest('.Button')) {
+      while (grid.firstChild) {
+        grid.removeChild(grid.firstChild);
+      }
+
+      start();
+    }
+  });
 });

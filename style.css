@@ -24,3 +24,54 @@
     position: absolute;
     background-image: url('/img/platform.png');
 }
+
+h5 {
+    margin: 0;
+}
+
+
+.Button {
+    position: relative;
+    top: 0px;
+    padding: 15px 25px;
+    border: solid #1a1a1a 3px;
+    border-radius: 20px;
+    margin: 10px;
+    box-shadow: 0px 10px 0px #1a1a1a;
+    font-weight: bold;
+    cursor: grab;
+    color: black;
+}
+
+.Button:hover {
+    top: 2px;
+    box-shadow: 0px 8px 0px #1a1a1a;
+}
+
+.Button:active {
+    transition: 100ms ease;
+    top: 8px;
+    box-shadow: 0px 2px 0px #1a1a1a;
+}
+
+.White {
+    background: #fff;
+}
+
+.White:hover {
+    background: #eee;
+}
+
+.White:active {
+    background: #ddd;
+}
+
+::selection {
+    color: Black;
+    background: #00000000;
+}
+
+::-moz-selection {
+    color: Black;
+    background: #00000000;
+}
